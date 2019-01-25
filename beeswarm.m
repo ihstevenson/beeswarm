@@ -6,17 +6,21 @@ if nargin<5, doPlot=false; end
 if nargin<6, corral='none'; end
 
 % extra parameters
-dcut=0.09;
-rwid = .05;
-nxloc=256;
-marker_alpha=0.5;
-chanwid = .9;
+rwid = .05; % width of overlay box/dash
+marker_alpha=0.5; % transparency of dots
+
+dcut=0.12; % spacing factor
+nxloc=256; % resolution for optimization
+chanwid = .9; % percent width of channel to use
 
 if doPlot
     s=scatter(x,y);
     xlim([min(x)-.5 max(x)+.5])
-    asp_rat = get(gca,'PlotBoxAspectRatio');
-    asp_rat=asp_rat(1);
+    yl=ylim();
+    pasp_rat = get(gca,'PlotBoxAspectRatio');
+    asp_rat = get(gca,'DataAspectRatio');
+%     asp_rat=asp_rat(1)/asp_rat(2)*pasp_rat(1)/pasp_rat(2);
+    asp_rat=pasp_rat(1)/pasp_rat(2);
 end
 yorig=y;
 switch lower(style)
@@ -32,13 +36,17 @@ switch lower(style)
         sid=randperm(length(y));
         y=y(sid);
     case 'square'
-        nxloc=7;
-        [~,e,b]=histcounts(y,ceil((range(x)+1)*nxloc/asp_rat));
+        nxloc=7;        
+%         [~,e,b]=histcounts(y,ceil((range(x)+1)*chanwid*nxloc/2/asp_rat));
+        edges = linspace(min(yl),max(yl),ceil((range(x)+1)*chanwid*nxloc/asp_rat));
+        [~,e,b]=histcounts(y,edges);
         y=e(b)'+mean(diff(e))/2;
         [y,sid]=sort(y);
     case 'hex'
         nxloc=7;
-        [~,e,b]=histcounts(y,ceil((range(x)+1)*nxloc/asp_rat));
+%         [~,e,b]=histcounts(y,ceil((range(x)+1)*chanwid*nxloc/2/sqrt(1-.5.^2)/asp_rat));
+        edges = linspace(min(yl),max(yl),ceil((range(x)+1)*chanwid*nxloc/sqrt(1-.5.^2)/asp_rat));
+        [~,e,b]=histcounts(y,edges);
         y=e(b)'+mean(diff(e))/2;
         [y,sid]=sort(y);
         b=b(sid);
@@ -53,7 +61,6 @@ yorig=yorig(sid);
 T=tabulate(ic);
 nmax=max(T(:,2));
 et=[];
-x=x+randn(size(x))/10;
 
 k=1;
 
@@ -63,7 +70,8 @@ for i=1:length(ux)
     rmult=range(ux)*2;
     xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult)'+ux(i);
     
-    zy=(y(fid)-min(y))/(max(y)-min(y))/asp_rat;
+%     zy=(y(fid)-min(y))/(max(y)-min(y))/asp_rat;
+    zy=(y(fid)-min(yl))/(max(yl)-min(yl))/asp_rat*(range(ux)+1)*chanwid;
     D0=squareform(pdist(zy))<dcut*2;
     
     for j=1:length(fid)
@@ -96,6 +104,8 @@ for i=1:length(ux)
         [~,mini] = min(e);
         if mini==1 && rand(1)>.5, mini=length(xi); end
         x(fid(j)) = xi(mini);
+        
+%         keyboard
     end
     x(fid)=x(fid)-median(x(fid))+ux(i);
     rx(i)=range(x(fid));
