@@ -1,5 +1,5 @@
 # beeswarm.m
-matlab port of beeswarm-style dot plots. reproduces most of the functionality of [beeswarm in R](http://www.cbs.dtu.dk/~eklund/beeswarm/))
+matlab port of beeswarm-style dot plots. reproduces most of the functionality of [beeswarm in R](http://www.cbs.dtu.dk/~eklund/beeswarm/).
 
 Ian Stevenson, CC-BY, 2019
 
