@@ -1,4 +1,26 @@
 function x = beeswarm(x,y,dsize,style,doPlot,corral)
+%function xbee = beeswarm(x,y,dot_size,plot_style,overlay_style,corral_style)
+%
+% Input arguments:
+%   x               column vector of groups (only tested for integer)
+%   y               column vector of data
+%   dot_size        relative. default=1
+%   plot_style      {'up' default, 'down', 'fan', 'rand', 'square', 'hex'}
+%   overlay_style   {false default, 'box', 'sd', 'ci'}
+%   corral_style    {'none' default, 'gutter', 'omit', 'rand'}
+%
+% Output arguments:
+%   xbee            optimized layout positions
+%
+% Known Issues:
+%       x locations depend on figure aspect ratio. resizing the figure window and rerunning may give different results
+%
+% Usage example:
+% 	x = round(rand(150,1)*5);
+%   y = randn(150,1);
+%   beeswarm(x,y,3,'up','ci')
+%
+% % Ian Stevenson, CC-BY 2019
 
 if nargin<3, dsize=1; end
 if nargin<4, style='up'; end
@@ -13,15 +35,17 @@ dcut=0.12; % spacing factor
 nxloc=256; % resolution for optimization
 chanwid = .9; % percent width of channel to use
 
+% get aspect ratio for figure window
 if doPlot
     s=scatter(x,y);
     xlim([min(x)-.5 max(x)+.5])
     yl=ylim();
     pasp_rat = get(gca,'PlotBoxAspectRatio');
     asp_rat = get(gca,'DataAspectRatio');
-%     asp_rat=asp_rat(1)/asp_rat(2)*pasp_rat(1)/pasp_rat(2);
     asp_rat=pasp_rat(1)/pasp_rat(2);
 end
+
+% sort/round y for different plot styles
 yorig=y;
 switch lower(style)
     case 'up'
@@ -55,25 +79,23 @@ switch lower(style)
 end
 x=x(sid);
 yorig=yorig(sid);
-
-
 [ux,~,ic] = unique(x);
-T=tabulate(ic);
-nmax=max(T(:,2));
-et=[];
+rmult=range(ux)*2;
 
-k=1;
-
+% for each group...
 for i=1:length(ux)
-    fid = find(ic==i);
+    fid = find(ic==i);   
     
-    rmult=range(ux)*2;
+    % set of possible x locations
     xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult)'+ux(i);
-    
-%     zy=(y(fid)-min(y))/(max(y)-min(y))/asp_rat;
+
+    % rescale y to that things are square visually
     zy=(y(fid)-min(yl))/(max(yl)-min(yl))/asp_rat*(range(ux)+1)*chanwid;
-    D0=squareform(pdist(zy))<dcut*2;
     
+    % precalculate y distances so that we only worry about nearby points
+    D0=squareform(pdist(zy))<dcut*2;    
+    
+    % for each data point in the group sequentially...
     for j=1:length(fid)
         if strcmp(lower(style),'hex')
             if mod(b(fid(j)),2)==0
@@ -83,7 +105,7 @@ for i=1:length(ux)
             end
         end
         zid = D0(j,1:j-1);
-        e = k*(xi-ux(i)).^2;
+        e = (xi-ux(i)).^2; % cost function
         if ~strcmp(lower(style),'hex') && ~strcmp(lower(style),'square')
             if sum(zid)>0
                 D = pdist2([xi ones(length(xi),1)*zy(j)], [x(fid(zid)) zy(zid)]);
@@ -104,18 +126,11 @@ for i=1:length(ux)
         [~,mini] = min(e);
         if mini==1 && rand(1)>.5, mini=length(xi); end
         x(fid(j)) = xi(mini);
-        
-%         keyboard
     end
-    x(fid)=x(fid)-median(x(fid))+ux(i);
-    rx(i)=range(x(fid));
-end
-for i=1:length(ux)
-    if strcmp(lower(corral),'norm')
-        x(ic==i)=(x(ic==i)-ux(i))/max(rx)*.9+ux(i);
-    end
+    x(fid)=x(fid)-median(x(fid))+ux(i); % center x locations by median
 end
 
+% corral any points outside of the channel
 out_of_range = abs(x-ux(ic))>chanwid/2;
 switch lower(corral)
     case 'gutter'
@@ -129,6 +144,7 @@ switch lower(corral)
         x(out_of_range)=ux(ic(out_of_range))+rand(sum(out_of_range),1)*chanwid-chanwid/2;
 end
 
+% plot groups and add overlay
 if doPlot
     cmap = lines(length(ux));
     for i=1:length(ux)
@@ -137,7 +153,6 @@ if doPlot
         iqr = prctile(yorig(ic==i),[25 75]);
         switch lower(doPlot)
             case 'box'
-%                 rectangle('Position',[ux(i)-rwid iqr(1) 2*rwid iqr(2)-iqr(1)],'EdgeColor',cmap(i,:),'LineWidth',2)
                 rectangle('Position',[ux(i)-rwid iqr(1) 2*rwid iqr(2)-iqr(1)],'EdgeColor','k','LineWidth',2)
                 line([ux(i)-rwid ux(i)+rwid],[1 1]*median(yorig(ic==i)),'LineWidth',3,'Color',cmap(i,:))
             case 'sd'
@@ -153,4 +168,5 @@ if doPlot
     xlim([min(ux)-.5 max(ux)+.5])
 end
 
+% unsort so that output matches the original y data
 x(sid)=x;
