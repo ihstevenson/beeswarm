@@ -29,7 +29,7 @@ if nargin<6, corral='none'; end
 
 % extra parameters
 rwid = .05; % width of overlay box/dash
-marker_alpha=0.5; % transparency of dots
+marker_alpha=0.3; % transparency of dots
 
 dcut=0.12; % spacing factor
 nxloc=256; % resolution for optimization
@@ -60,7 +60,7 @@ switch lower(style)
         sid=randperm(length(y));
         y=y(sid);
     case 'square'
-        nxloc=7;        
+        nxloc=7;
 %         [~,e,b]=histcounts(y,ceil((range(x)+1)*chanwid*nxloc/2/asp_rat));
         edges = linspace(min(yl),max(yl),ceil((range(x)+1)*chanwid*nxloc/asp_rat));
         [~,e,b]=histcounts(y,edges);
@@ -70,7 +70,11 @@ switch lower(style)
         nxloc=7;
 %         [~,e,b]=histcounts(y,ceil((range(x)+1)*chanwid*nxloc/2/sqrt(1-.5.^2)/asp_rat));
         edges = linspace(min(yl),max(yl),ceil((range(x)+1)*chanwid*nxloc/sqrt(1-.5.^2)/asp_rat));
-        [~,e,b]=histcounts(y,edges);
+        [n,e,b]=histcounts(y,edges);
+        oddmaj=0;
+        if sum(mod(n(1:2:end),2)==1)>sum(mod(n(2:2:end),2)==1),
+            oddmaj=1;
+        end
         y=e(b)'+mean(diff(e))/2;
         [y,sid]=sort(y);
         b=b(sid);
@@ -87,7 +91,7 @@ for i=1:length(ux)
     fid = find(ic==i);   
     
     % set of possible x locations
-    xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult)'+ux(i);
+    xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult+(mod(nxloc*rmult,2)==0))'+ux(i);
 
     % rescale y to that things are square visually
     zy=(y(fid)-min(yl))/(max(yl)-min(yl))/asp_rat*(range(ux)+1)*chanwid;
@@ -98,10 +102,10 @@ for i=1:length(ux)
     % for each data point in the group sequentially...
     for j=1:length(fid)
         if strcmp(lower(style),'hex')
-            if mod(b(fid(j)),2)==0
-                xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult)'+ux(i)+mean(diff(xi))/2;
+            if mod(b(fid(j)),2)==oddmaj
+                xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult+(mod(nxloc*rmult,2)==0))'+ux(i)+mean(diff(xi))/2;
             else
-                xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult)'+ux(i);
+                xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult+(mod(nxloc*rmult,2)==0))'+ux(i);
             end
         end
         zid = D0(j,1:j-1);
@@ -109,17 +113,19 @@ for i=1:length(ux)
         if ~strcmp(lower(style),'hex') && ~strcmp(lower(style),'square')
             if sum(zid)>0
                 D = pdist2([xi ones(length(xi),1)*zy(j)], [x(fid(zid)) zy(zid)]);
-                D(D>dcut)=Inf;
-                D(D<dcut)=0;
-                e = e + sum(1./D,2) + randn(1)*10e-6;
+                D(D<=dcut)=Inf;
+                D(D>dcut & isfinite(D))=0;
+                e = e + sum(D,2) + randn(1)*10e-6; % noise to tie-break
             end
         else
             if sum(zid)>0
                 D = pdist2([xi ones(length(xi),1)*zy(j)], [x(fid(zid)) zy(zid)]);
                 D(D==0)=Inf;
-                e = e + sum(D,2);
+                D(D>dcut & isfinite(D))=0;
+                e = e + sum(D,2) + randn(1)*10e-6; % noise to tie-break
             end
         end
+        
         if strcmp(lower(style),'one')
             e(xi<ux(i))=Inf;
         end
@@ -127,7 +133,11 @@ for i=1:length(ux)
         if mini==1 && rand(1)>.5, mini=length(xi); end
         x(fid(j)) = xi(mini);
     end
-    x(fid)=x(fid)-median(x(fid))+ux(i); % center x locations by median
+%     x(fid)=x(fid)-median(x(fid))+ux(i); % center x locations by median
+end
+
+if strcmp(lower(style),'randn')
+    x=ux(ic)+randn(size(ic))/4;
 end
 
 % corral any points outside of the channel
@@ -159,7 +169,7 @@ if doPlot
                 line([1 1]*ux(i),mean(yorig(ic==i))+[-1 1]*std(yorig(ic==i)),'Color',cmap(i,:),'LineWidth',2)
                 line([ux(i)-2*rwid ux(i)+2*rwid],[1 1]*mean(yorig(ic==i)),'LineWidth',3,'Color',cmap(i,:))
             case 'ci'
-                line([1 1]*ux(i),mean(yorig(ic==i))+[-1 1]*std(yorig(ic==i))/sqrt(sum(ic==i))*tinv(0.975,sum(ic==i)),'Color',cmap(i,:),'LineWidth',2)
+                line([1 1]*ux(i),mean(yorig(ic==i))+[-1 1]*std(yorig(ic==i))/sqrt(sum(ic==i))*tinv(0.975,sum(ic==i)-1),'Color',cmap(i,:),'LineWidth',2)
                 line([ux(i)-2*rwid ux(i)+2*rwid],[1 1]*mean(yorig(ic==i)),'LineWidth',3,'Color',cmap(i,:))
         end
         
