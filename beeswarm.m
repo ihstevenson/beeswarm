@@ -1,13 +1,13 @@
 function x = beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_current_axes)
-%function xbee = beeswarm(x,y,dot_size,sort_style,overlay_style,corral_style)
+%function xbee = beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_current_axes)
 %
 % Input arguments:
 %   x               column vector of groups (only tested for integer)
 %   y               column vector of data
-%   dot_size        relative. default=1
 %   sort_style      ('nosort' - default | 'up' | 'down' | 'fan' | 'rand' | 'square' | 'hex')
-%   overlay_style   (false default | 'box' | 'sd' | 'ci')
 %   corral_style    ('none' default | 'gutter' | 'omit' | 'rand')
+%   dot_size        relative. default=1
+%   overlay_style   (false default | 'box' | 'sd' | 'ci')
 %   use_current_axes (false default | true)
 %
 % Output arguments:
@@ -37,6 +37,8 @@ marker_alpha=0.3; % transparency of dots
 dcut=0.12; % spacing factor
 nxloc=256; % resolution for optimization
 chanwid = .9; % percent width of channel to use
+yl = [min(y) max(y)]; % default y-limits
+asp_rat = 1;
 
 % get aspect ratio for a figure window
 if isfinite(dot_size)

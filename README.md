@@ -7,22 +7,32 @@ Ian Stevenson, CC-BY, 2019
 
 ## typical use cases
 
-beeswarm(x,y,dot_size,layout_style,overlay_style,corral_style)
+```matlab
+beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_current_axes)
+xbee = beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_current_axes)
 
-xbee = beeswarm(x,y,1,layout_style,false,corral_style)
+% example
+x = round(rand(80,1)*2);
+y = randn(80,1);
+beeswarm(x,y,'up','none',4)
+```
 
-### layout-styles
 
-{'up' [default],'fan','down','rand','square','hex'}
+
+
+### sort-styles
+
+{'nosort' [default], 'up' ,'fan','down','rand','square','hex'}
 
 ![beeswarm_styles.png](https://raw.githubusercontent.com/ihstevenson/beeswarm/master/beeswarm_styles.png)
-
-### overlay-styles
-
-{'box' [default],'sd','ci'}
 
 ### corral-styles
 
 {'none' [default], 'gutter', 'omit', 'random'}
 
 ![beeswarm_corrals.png](https://raw.githubusercontent.com/ihstevenson/beeswarm/master/beeswarm_corrals.png)
+
+### overlay-styles
+
+{'box' [default],'sd','ci'}
+
