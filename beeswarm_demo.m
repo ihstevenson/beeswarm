@@ -1,19 +1,6 @@
 
-%% dot size
 
-x = round(rand(50,1)*2);
-y = randn(50,1);
-y(x==0)=y(x==0)+5;
-
-figure(4)
-dvec = [0.25 0.5 0.75 1]*2;
-for i=1:length(dvec)
-    subplot(1,length(dvec),i)
-    beeswarm(x,y,dvec(i),'hex','ci');
-    title(num2str(dvec(i)))
-end
-
-%% sort method
+%% sort methods
 
 x = round(rand(80,1)*2);
 y = randn(80,1);
@@ -23,8 +10,8 @@ y(x==2)=y(x==2)-2;
 figure(1);
 styles={'up','fan','down','rand','square','hex'};
 for i=1:length(styles)
-    subtightplot(2,3,i,[0.1 0.01])
-    beeswarm(x,y,2.5,styles{i},'sd','');
+    subplot(2,3,i)
+    beeswarm(x,y,styles{i},'',2,'sd');
     title(styles{i})
     set(gca,'TitleFontSizeMultiplier',1.75)
     if i==1
@@ -32,33 +19,62 @@ for i=1:length(styles)
     else
         ylim(yl);
     end
-	axis off
 end
 
+%% dot size
 
+x = round(rand(50,1)*2);
+y = randn(50,1);
+y(x==0)=y(x==0)+5;
 
-%% overlay
+figure(2)
+dvec = [0.25 0.5 0.75 1]*2;
+for i=1:length(dvec)
+    subplot(1,length(dvec),i)
+    beeswarm(x,y,'hex','',dvec(i),'ci');
+    title(num2str(dvec(i)))
+end
+
+%% overlay styles
 
 x = round(rand(100,1)*2);
 y = randn(100,1);
 y(x==0)=y(x==0)+5;
-figure(2)
-plotstyles={'box','sd','ci'};
+figure(3)
+styles={'box','sd','ci'};
 for i=1:length(styles)
-    subplot(1,length(plotstyles),i)
-    beeswarm(x,y,2.5,'',plotstyles{i});
-    title(plotstyles{i})
+    subplot(1,length(styles),i)
+    beeswarm(x,y,'up','',2,styles{i});
+    title(styles{i})
 end
 
-%% corral
+%% corral styles
 
 x = round(rand(800,1)*2);
 y = randn(800,1);
 y(x==0)=y(x==0)+2;
-figure(3)
-corralstyles = {'none','gutter','omit','random'};
-for i=1:length(corralstyles)
-    subplot(1,length(corralstyles),i)
-    beeswarm(x,y,1,'up','ci',corralstyles{i});
-    title(corralstyles{i})
+figure(4)
+styles = {'none','gutter','omit','random'};
+for i=1:length(styles)
+    subplot(1,length(styles),i)
+    beeswarm(x,y,'up',styles{i},2,'ci');
+    title(styles{i})
 end
+
+%% changing the axes will change results - we need to know the aspect ratio to detect "collisions"
+
+figure(5)
+subplot(1,3,1)
+beeswarm(x,y,'up','none',2,'sd');
+ylim([-3 5])
+subplot(1,3,2)
+beeswarm(x,y,'up','none',2,'sd');
+axis tight
+ylim([-3 5])
+beeswarm(x,y,'up','none',2,'sd',true);
+subplot(1,3,3)
+x1=beeswarm(x,y,'up','none',2,'sd');
+ylim([-10 10])
+xlim([-1 3])
+x2=beeswarm(x,y,'up','none',2,'sd',true);
+ylim([-3 5])

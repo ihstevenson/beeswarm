@@ -1,19 +1,21 @@
-function x = beeswarm(x,y,dsize,style,doPlot,corral)
-%function xbee = beeswarm(x,y,dot_size,plot_style,overlay_style,corral_style)
+function x = beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_current_axes)
+%function xbee = beeswarm(x,y,dot_size,sort_style,overlay_style,corral_style)
 %
 % Input arguments:
 %   x               column vector of groups (only tested for integer)
 %   y               column vector of data
 %   dot_size        relative. default=1
-%   plot_style      {'up' default, 'down', 'fan', 'rand', 'square', 'hex'}
-%   overlay_style   {false default, 'box', 'sd', 'ci'}
-%   corral_style    {'none' default, 'gutter', 'omit', 'rand'}
+%   sort_style      ('nosort' - default | 'up' | 'down' | 'fan' | 'rand' | 'square' | 'hex')
+%   overlay_style   (false default | 'box' | 'sd' | 'ci')
+%   corral_style    ('none' default | 'gutter' | 'omit' | 'rand')
+%   use_current_axes (false default | true)
 %
 % Output arguments:
 %   xbee            optimized layout positions
 %
 % Known Issues:
 %       x locations depend on figure aspect ratio. resizing the figure window and rerunning may give different results
+%       setting corral to 'none' still has a gutter when the width is large
 %
 % Usage example:
 % 	x = round(rand(150,1)*5);
@@ -22,10 +24,11 @@ function x = beeswarm(x,y,dsize,style,doPlot,corral)
 %
 % % Ian Stevenson, CC-BY 2019
 
-if nargin<3, dsize=1; end
-if nargin<4, style='up'; end
-if nargin<5, doPlot=false; end
-if nargin<6, corral='none'; end
+if nargin<3, sort_style='nosort'; end
+if nargin<4, corral_style='none'; end
+if nargin<5, dot_size=NaN; end
+if nargin<6, overlay_style=false; end
+if nargin<7, use_current_axes=false; end
 
 % extra parameters
 rwid = .05; % width of overlay box/dash
@@ -35,10 +38,15 @@ dcut=0.12; % spacing factor
 nxloc=256; % resolution for optimization
 chanwid = .9; % percent width of channel to use
 
-% get aspect ratio for figure window
-if doPlot
-    s=scatter(x,y);
-    xlim([min(x)-.5 max(x)+.5])
+% get aspect ratio for a figure window
+if isfinite(dot_size)
+    if ~use_current_axes
+        % make new axes
+        s=scatter(x,y);
+        xl=[min(x)-.5 max(x)+.5];
+    else
+        xl=xlim();
+    end
     yl=ylim();
     pasp_rat = get(gca,'PlotBoxAspectRatio');
     asp_rat = get(gca,'DataAspectRatio');
@@ -47,7 +55,7 @@ end
 
 % sort/round y for different plot styles
 yorig=y;
-switch lower(style)
+switch lower(sort_style)
     case 'up'
         [y,sid]=sort(y);
     case 'fan'
@@ -101,7 +109,7 @@ for i=1:length(ux)
     
     % for each data point in the group sequentially...
     for j=1:length(fid)
-        if strcmp(lower(style),'hex')
+        if strcmp(lower(sort_style),'hex')
             if mod(b(fid(j)),2)==oddmaj
                 xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult+(mod(nxloc*rmult,2)==0))'+ux(i)+mean(diff(xi))/2;
             else
@@ -110,7 +118,7 @@ for i=1:length(ux)
         end
         zid = D0(j,1:j-1);
         e = (xi-ux(i)).^2; % cost function
-        if ~strcmp(lower(style),'hex') && ~strcmp(lower(style),'square')
+        if ~strcmp(lower(sort_style),'hex') && ~strcmp(lower(sort_style),'square')
             if sum(zid)>0
                 D = pdist2([xi ones(length(xi),1)*zy(j)], [x(fid(zid)) zy(zid)]);
                 D(D<=dcut)=Inf;
@@ -126,7 +134,7 @@ for i=1:length(ux)
             end
         end
         
-        if strcmp(lower(style),'one')
+        if strcmp(lower(sort_style),'one')
             e(xi<ux(i))=Inf;
         end
         [~,mini] = min(e);
@@ -136,13 +144,13 @@ for i=1:length(ux)
 %     x(fid)=x(fid)-median(x(fid))+ux(i); % center x locations by median
 end
 
-if strcmp(lower(style),'randn')
+if strcmp(lower(sort_style),'randn')
     x=ux(ic)+randn(size(ic))/4;
 end
 
 % corral any points outside of the channel
 out_of_range = abs(x-ux(ic))>chanwid/2;
-switch lower(corral)
+switch lower(corral_style)
     case 'gutter'
         id = (x-ux(ic))>chanwid/2;
         x(id)=chanwid/2+ux(ic(id));
@@ -155,13 +163,13 @@ switch lower(corral)
 end
 
 % plot groups and add overlay
-if doPlot
+if isfinite(dot_size)
     cmap = lines(length(ux));
     for i=1:length(ux)
-        scatter(x(ic==i),y(ic==i),dsize*36,'filled','MarkerFaceAlpha',marker_alpha,'MarkerEdgeColor','none','MarkerFaceColor',cmap(i,:))
+        scatter(x(ic==i),y(ic==i),dot_size*36,'filled','MarkerFaceAlpha',marker_alpha,'MarkerEdgeColor','none','MarkerFaceColor',cmap(i,:))
         hold on
         iqr = prctile(yorig(ic==i),[25 75]);
-        switch lower(doPlot)
+        switch lower(overlay_style)
             case 'box'
                 rectangle('Position',[ux(i)-rwid iqr(1) 2*rwid iqr(2)-iqr(1)],'EdgeColor','k','LineWidth',2)
                 line([ux(i)-rwid ux(i)+rwid],[1 1]*median(yorig(ic==i)),'LineWidth',3,'Color',cmap(i,:))
@@ -175,7 +183,8 @@ if doPlot
         
     end
     hold off
-    xlim([min(ux)-.5 max(ux)+.5])
+    xlim(xl)
+    ylim(yl)
 end
 
 % unsort so that output matches the original y data
