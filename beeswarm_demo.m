@@ -11,7 +11,7 @@ figure(1);
 styles={'up','fan','down','rand','square','hex'};
 for i=1:length(styles)
     subplot(2,3,i)
-    beeswarm(x,y,styles{i},'',2,'sd');
+    beeswarm(x,y,styles{i},'',1,'sd');
     title(styles{i})
     set(gca,'TitleFontSizeMultiplier',1.75)
     if i==1
@@ -57,7 +57,7 @@ figure(4)
 styles = {'none','gutter','omit','random'};
 for i=1:length(styles)
     subplot(1,length(styles),i)
-    beeswarm(x,y,'up',styles{i},2,'ci');
+    beeswarm(x,y,'up',styles{i},1,'ci');
     title(styles{i})
 end
 

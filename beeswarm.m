@@ -26,7 +26,7 @@ function x = beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_cur
 
 if nargin<3, sort_style='nosort'; end
 if nargin<4, corral_style='none'; end
-if nargin<5, dot_size=NaN; end
+if nargin<5, dot_size=1; end
 if nargin<6, overlay_style=false; end
 if nargin<7, use_current_axes=false; end
 
@@ -34,7 +34,7 @@ if nargin<7, use_current_axes=false; end
 rwid = .05; % width of overlay box/dash
 marker_alpha=0.3; % transparency of dots
 
-dcut=0.12; % spacing factor
+dcut=22; % spacing factor
 nxloc=256; % resolution for optimization
 chanwid = .9; % percent width of channel to use
 yl = [min(y) max(y)]; % default y-limits
@@ -52,7 +52,13 @@ if isfinite(dot_size)
     yl=ylim();
     pasp_rat = get(gca,'PlotBoxAspectRatio');
     asp_rat = get(gca,'DataAspectRatio');
-    asp_rat=pasp_rat(1)/pasp_rat(2);
+    asp_rat = pasp_rat(1)/pasp_rat(2);
+    
+    % pix-scale
+    pf = get(gcf,'Position');
+    pa = get(gca,'Position');
+    as = pf(3:4).*pa(3:4); % width and height of panel in pixels
+    dcut = dcut*sqrt(dot_size)/as(1)
 end
 
 % sort/round y for different plot styles
@@ -70,14 +76,14 @@ switch lower(sort_style)
         sid=randperm(length(y));
         y=y(sid);
     case 'square'
-        nxloc=7;
+        nxloc=.9/dcut;
 %         [~,e,b]=histcounts(y,ceil((range(x)+1)*chanwid*nxloc/2/asp_rat));
         edges = linspace(min(yl),max(yl),ceil((range(x)+1)*chanwid*nxloc/asp_rat));
         [~,e,b]=histcounts(y,edges);
         y=e(b)'+mean(diff(e))/2;
         [y,sid]=sort(y);
     case 'hex'
-        nxloc=7;
+        nxloc=.9/dcut;
 %         [~,e,b]=histcounts(y,ceil((range(x)+1)*chanwid*nxloc/2/sqrt(1-.5.^2)/asp_rat));
         edges = linspace(min(yl),max(yl),ceil((range(x)+1)*chanwid*nxloc/sqrt(1-.5.^2)/asp_rat));
         [n,e,b]=histcounts(y,edges);
