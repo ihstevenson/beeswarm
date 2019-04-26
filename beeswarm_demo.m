@@ -1,4 +1,21 @@
 
+%% basic demo
+
+figure(6)
+x = round(rand(200,1)*1);
+y = randn(200,1);
+subplot(1,3,1)
+beeswarm(x,y);
+
+x = round(rand(400,1)*3);
+y = randn(400,1);
+subplot(1,3,2)
+beeswarm(x,y);
+
+x = round(rand(600,1)*7);
+y = randn(600,1);
+subplot(1,3,3)
+beeswarm(x,y);
 
 %% sort methods
 
@@ -11,7 +28,7 @@ figure(1);
 styles={'up','fan','down','rand','square','hex'};
 for i=1:length(styles)
     subplot(2,3,i)
-    beeswarm(x,y,styles{i},'',1,'sd');
+    beeswarm(x,y,styles{i},'',.5,'sd');
     title(styles{i})
     set(gca,'TitleFontSizeMultiplier',1.75)
     if i==1
@@ -44,7 +61,7 @@ figure(3)
 styles={'box','sd','ci'};
 for i=1:length(styles)
     subplot(1,length(styles),i)
-    beeswarm(x,y,'up','',2,styles{i});
+    beeswarm(x,y,'up','',1,styles{i});
     title(styles{i})
 end
 
@@ -57,7 +74,7 @@ figure(4)
 styles = {'none','gutter','omit','random'};
 for i=1:length(styles)
     subplot(1,length(styles),i)
-    beeswarm(x,y,'up',styles{i},1,'ci');
+    beeswarm(x,y,'up',styles{i},.5,'ci');
     title(styles{i})
 end
 
@@ -65,16 +82,16 @@ end
 
 figure(5)
 subplot(1,3,1)
-beeswarm(x,y,'up','none',2,'sd');
+beeswarm(x,y,'up','none',.5,'sd');
 ylim([-3 5])
 subplot(1,3,2)
-beeswarm(x,y,'up','none',2,'sd');
+beeswarm(x,y,'up','none',.5,'sd');
 axis tight
 ylim([-3 5])
-beeswarm(x,y,'up','none',2,'sd',true);
+beeswarm(x,y,'up','none',.5,'sd',true);
 subplot(1,3,3)
-x1=beeswarm(x,y,'up','none',2,'sd');
+x1=beeswarm(x,y,'up','none',.5,'sd');
 ylim([-10 10])
 xlim([-1 3])
-x2=beeswarm(x,y,'up','none',2,'sd',true);
+x2=beeswarm(x,y,'up','none',.5,'sd',true);
 ylim([-3 5])

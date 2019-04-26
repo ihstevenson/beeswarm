@@ -26,7 +26,7 @@ function x = beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_cur
 
 if nargin<3, sort_style='nosort'; end
 if nargin<4, corral_style='none'; end
-if nargin<5, dot_size=1; end
+if nargin<5, dot_size=11/sqrt(length(x)); end
 if nargin<6, overlay_style=false; end
 if nargin<7, use_current_axes=false; end
 
@@ -34,8 +34,8 @@ if nargin<7, use_current_axes=false; end
 rwid = .05; % width of overlay box/dash
 marker_alpha=0.3; % transparency of dots
 
-dcut=22; % spacing factor
-nxloc=256; % resolution for optimization
+dcut=8; % spacing factor
+nxloc=512; % resolution for optimization
 chanwid = .9; % percent width of channel to use
 yl = [min(y) max(y)]; % default y-limits
 asp_rat = 1;
@@ -51,14 +51,15 @@ if isfinite(dot_size)
     end
     yl=ylim();
     pasp_rat = get(gca,'PlotBoxAspectRatio');
-    asp_rat = get(gca,'DataAspectRatio');
+    dasp_rat = get(gca,'DataAspectRatio');
     asp_rat = pasp_rat(1)/pasp_rat(2);
     
     % pix-scale
     pf = get(gcf,'Position');
     pa = get(gca,'Position');
     as = pf(3:4).*pa(3:4); % width and height of panel in pixels
-    dcut = dcut*sqrt(dot_size)/as(1)
+    dcut = dcut*sqrt(dot_size)/as(1)*(range(unique(x))+1);
+    cla
 end
 
 % sort/round y for different plot styles
@@ -100,7 +101,8 @@ end
 x=x(sid);
 yorig=yorig(sid);
 [ux,~,ic] = unique(x);
-rmult=range(ux)*2;
+% rmult=(range(ux)+1)*2;
+rmult=2;
 
 % for each group...
 for i=1:length(ux)
@@ -115,39 +117,40 @@ for i=1:length(ux)
     % precalculate y distances so that we only worry about nearby points
     D0=squareform(pdist(zy))<dcut*2;    
     
-    % for each data point in the group sequentially...
-    for j=1:length(fid)
-        if strcmp(lower(sort_style),'hex')
-            if mod(b(fid(j)),2)==oddmaj
-                xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult+(mod(nxloc*rmult,2)==0))'+ux(i)+mean(diff(xi))/2;
-            else
+    if length(fid)>1
+        % for each data point in the group sequentially...
+        for j=1:length(fid)
+            if strcmp(lower(sort_style),'hex')
                 xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult+(mod(nxloc*rmult,2)==0))'+ux(i);
+                if mod(b(fid(j)),2)==oddmaj
+                    xi = linspace(-chanwid/2*rmult,chanwid/2*rmult,nxloc*rmult+(mod(nxloc*rmult,2)==0))'+ux(i)+mean(diff(xi))/2;
+                end
             end
-        end
-        zid = D0(j,1:j-1);
-        e = (xi-ux(i)).^2; % cost function
-        if ~strcmp(lower(sort_style),'hex') && ~strcmp(lower(sort_style),'square')
-            if sum(zid)>0
-                D = pdist2([xi ones(length(xi),1)*zy(j)], [x(fid(zid)) zy(zid)]);
-                D(D<=dcut)=Inf;
-                D(D>dcut & isfinite(D))=0;
-                e = e + sum(D,2) + randn(1)*10e-6; % noise to tie-break
+            zid = D0(j,1:j-1);
+            e = (xi-ux(i)).^2; % cost function
+            if ~strcmp(lower(sort_style),'hex') && ~strcmp(lower(sort_style),'square')
+                if sum(zid)>0
+                    D = pdist2([xi ones(length(xi),1)*zy(j)], [x(fid(zid)) zy(zid)]);
+                    D(D<=dcut)=Inf;
+                    D(D>dcut & isfinite(D))=0;
+                    e = e + sum(D,2) + randn(1)*10e-6; % noise to tie-break
+                end
+            else
+                if sum(zid)>0
+                    D = pdist2([xi ones(length(xi),1)*zy(j)], [x(fid(zid)) zy(zid)]);
+                    D(D==0)=Inf;
+                    D(D>dcut & isfinite(D))=0;
+                    e = e + sum(D,2) + randn(1)*10e-6; % noise to tie-break
+                end
             end
-        else
-            if sum(zid)>0
-                D = pdist2([xi ones(length(xi),1)*zy(j)], [x(fid(zid)) zy(zid)]);
-                D(D==0)=Inf;
-                D(D>dcut & isfinite(D))=0;
-                e = e + sum(D,2) + randn(1)*10e-6; % noise to tie-break
+
+            if strcmp(lower(sort_style),'one')
+                e(xi<ux(i))=Inf;
             end
+            [~,mini] = min(e);
+            if mini==1 && rand(1)>.5, mini=length(xi); end
+            x(fid(j)) = xi(mini);
         end
-        
-        if strcmp(lower(sort_style),'one')
-            e(xi<ux(i))=Inf;
-        end
-        [~,mini] = min(e);
-        if mini==1 && rand(1)>.5, mini=length(xi); end
-        x(fid(j)) = xi(mini);
     end
 %     x(fid)=x(fid)-median(x(fid))+ux(i); % center x locations by median
 end
