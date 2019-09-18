@@ -8,13 +8,16 @@ Ian Stevenson, CC-BY, 2019
 ## typical use cases
 
 ```matlab
-beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_current_axes)
-xbee = beeswarm(x,y,sort_style,corral_style,dot_size,overlay_style,use_current_axes)
+beeswarm(x,y,...)
+xbee = beeswarm(x,y,...)
 
 % example
 x = round(rand(80,1)*2);
 y = randn(80,1);
-beeswarm(x,y,'up','none',4)
+beeswarm(x,y,'sort_style',up','dot_size',4)
+
+% optional arguments
+sort_style, corral_style, dot_size, overlay_style, use_current_axes, colormap, MarkerFaceColor, MarkerFaceAlpha, MarkerEdgeColor
 ```
 
 

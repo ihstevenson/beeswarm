@@ -23,7 +23,7 @@ function x = beeswarm(x,y,varargin)
 % Usage example:
 % 	x = round(rand(150,1)*5);
 %   y = randn(150,1);
-%   beeswarm(x,y,3,'sort_style','up','overlay_style','ci')
+%   beeswarm(x,y,3,'up','ci')
 %
 % % Ian Stevenson, CC-BY 2019
 
@@ -50,7 +50,6 @@ nxloc=512; % resolution for optimization
 chanwid = .9; % percent width of channel to use
 yl = [min(y) max(y)]; % default y-limits
 asp_rat = 1;
-keep_hold = false;
 
 % get aspect ratio for a figure window
 if isfinite(p.Results.dot_size)
@@ -71,11 +70,8 @@ if isfinite(p.Results.dot_size)
     pa = get(gca,'Position');
     as = pf(3:4).*pa(3:4); % width and height of panel in pixels
     dcut = dcut*sqrt(p.Results.dot_size)/as(1)*(range(unique(x))+1);
-    if ~ishold
-        cla
-    else
-        keep_hold = true;
-    end
+    
+    cla
 end
 
 % sort/round y for different plot styles
@@ -218,9 +214,6 @@ if isfinite(p.Results.dot_size)
         
     end
     hold off
-    if keep_hold
-        hold on
-    end
     xlim(xl)
     ylim(yl)
 end
