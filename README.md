@@ -15,12 +15,10 @@ xbee = beeswarm(x,y,...)
 x = round(rand(80,1)*2);
 y = randn(80,1);
 beeswarm(x,y,'sort_style',up','dot_size',4)
-
-% optional arguments
-sort_style, corral_style, dot_size, overlay_style, use_current_axes, colormap, MarkerFaceColor, MarkerFaceAlpha, MarkerEdgeColor
 ```
 
-
+### optional arguments
+{sort_style, corral_style, dot_size, overlay_style, use_current_axes, colormap, MarkerFaceColor, MarkerFaceAlpha, MarkerEdgeColor}
 
 
 ### sort-styles
