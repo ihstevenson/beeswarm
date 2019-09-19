@@ -14,7 +14,7 @@ xbee = beeswarm(x,y,...)
 % example
 x = round(rand(80,1)*2);
 y = randn(80,1);
-beeswarm(x,y,'sort_style',up','dot_size',4)
+beeswarm(x,y,'sort_style','up','dot_size',4)
 ```
 
 ### optional arguments
