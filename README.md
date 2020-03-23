@@ -1,6 +1,8 @@
 # beeswarm.m
 matlab port of beeswarm-style dot plots. reproduces most of the functionality of [beeswarm in R](http://www.cbs.dtu.dk/~eklund/beeswarm/).
 
+[![View beeswarm on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/70120-beeswarm)
+
 Ian Stevenson, CC-BY, 2019
 
 ![beeswarm_dist.png](https://raw.githubusercontent.com/ihstevenson/beeswarm/master/beeswarm_dist.png)
